@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  seccast:
+    build: .
+    container_name: seccast
+    restart: unless-stopped
+    ports:
+      - "3000:3000"        # đổi 3000 bên trái nếu muốn port khác
+    environment:
+      - PORT=3000
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - SESSION_SECRET=${SESSION_SECRET:-seccast-local-secret}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SUPABASE_BUCKET=${SUPABASE_BUCKET:-podcasts}
+    env_file:
+      - .env                # tự động load file .env nếu có

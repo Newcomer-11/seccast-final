@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SEC//CAST — Control Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#080c0a;--surface:#0f1512;--surface2:#141c18;
+      --border:#1a2820;--border2:#243529;
+      --green:#00ff88;--green-dim:#00cc6a;--green-dark:#042010;
+      --green-glow:rgba(0,255,136,.07);
+      --red:#ff3c5a;--amber:#ffaa00;
+      --text:#c8ffe0;--muted:#4a7060;
+      --mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;--open:'Open Sans',sans-serif;
+    }
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+    body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+      background-image:linear-gradient(rgba(0,255,136,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.03) 1px,transparent 1px);
+      background-size:48px 48px}
+    body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+      background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px)}
+
+    /* Header */
+    header{position:sticky;top:0;z-index:50;background:rgba(8,12,10,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border2)}
+    .header-inner{max-width:1000px;margin:0 auto;padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px}
+    .logo{font-family:var(--mono);font-size:.95rem;color:var(--green);text-shadow:0 0 16px rgba(0,255,136,.4);display:flex;align-items:center;gap:10px}
+    .logo-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+    .badge{padding:2px 8px;border:1px solid var(--border2);border-radius:3px;font-family:var(--mono);font-size:.58rem;letter-spacing:.1em;color:var(--amber)}
+    .header-actions{display:flex;align-items:center;gap:8px}
+    .hbtn{font-family:var(--mono);font-size:.65rem;padding:6px 14px;border-radius:4px;cursor:pointer;letter-spacing:.08em;border:1px solid;transition:all .15s;text-decoration:none;display:inline-block}
+    .hbtn-ghost{background:transparent;border-color:var(--border2);color:var(--muted)}
+    .hbtn-ghost:hover{border-color:var(--green);color:var(--green)}
+    .hbtn-danger{background:transparent;border-color:rgba(255,60,90,.3);color:var(--red)}
+    .hbtn-danger:hover{background:rgba(255,60,90,.08)}
+
+    /* Layout */
+    .container{max-width:1000px;margin:0 auto;padding:30px 28px;position:relative;z-index:1}
+
+    /* Stats */
+    .stats-row{display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap}
+    .stat-card{background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:14px 18px;flex:1;min-width:140px}
+    .stat-card .val{font-family:var(--mono);font-size:1.4rem;color:var(--green)}
+    .stat-card .lbl{font-family:var(--mono);font-size:.55rem;color:var(--muted);letter-spacing:.12em;margin-top:3px}
+
+    /* Upload form card */
+    .upload-card{background:var(--surface);border:1px solid var(--border2);border-radius:8px;margin-bottom:28px;overflow:hidden}
+    .upload-card-header{
+      padding:14px 20px;border-bottom:1px solid var(--border2);
+      display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+      font-family:var(--mono);font-size:.72rem;color:var(--text);letter-spacing:.05em;
+    }
+    .upload-card-header .toggle-icon{color:var(--green);font-size:.8rem;transition:transform .2s}
+    .upload-card-header.collapsed .toggle-icon{transform:rotate(-90deg)}
+    .upload-card-body{padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:600px){.upload-card-body{grid-template-columns:1fr}}
+
+    /* Drop zone inside card */
+    .drop-zone{
+      grid-column:1/-1;
+      border:1.5px dashed var(--border2);border-radius:6px;
+      padding:28px 20px;text-align:center;cursor:pointer;
+      transition:border-color .2s,background .2s;background:var(--bg)
+    }
+    .drop-zone.drag{border-color:var(--green);background:rgba(0,255,136,.04)}
+    .drop-zone .dz-icon{font-size:1.6rem;margin-bottom:6px;opacity:.5}
+    .drop-zone .dz-label{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-bottom:10px}
+    .drop-zone .dz-file-name{font-family:var(--mono);font-size:.68rem;color:var(--green);margin-top:6px}
+    #file-input,#thumb-input{display:none}
+
+    /* Form fields */
+    .field{display:flex;flex-direction:column;gap:5px}
+    .field label{font-family:var(--mono);font-size:.6rem;color:var(--muted);letter-spacing:.1em}
+    .field label::before{content:'> ';color:var(--green)}
+    .field input,.field textarea{
+      background:var(--bg);border:1px solid var(--border2);border-radius:5px;
+      padding:9px 12px;font-family:var(--open);font-size:.82rem;color:var(--text);
+      outline:none;transition:border-color .15s;resize:none
+    }
+    .field input:focus,.field textarea:focus{border-color:var(--green)}
+    .field input::placeholder,.field textarea::placeholder{color:var(--muted2,#2e4a3a)}
+
+    /* Thumb preview */
+    .thumb-field{display:flex;flex-direction:column;gap:5px}
+    .thumb-field label{font-family:var(--mono);font-size:.6rem;color:var(--muted);letter-spacing:.1em}
+    .thumb-field label::before{content:'> ';color:var(--green)}
+    .thumb-preview-wrap{
+      width:100%;aspect-ratio:1;max-width:100px;border-radius:8px;overflow:hidden;
+      border:1px solid var(--border2);background:var(--bg);
+      display:flex;align-items:center;justify-content:center;cursor:pointer;
+      transition:border-color .15s;
+    }
+    .thumb-preview-wrap:hover{border-color:var(--green)}
+    .thumb-preview-wrap img{width:100%;height:100%;object-fit:cover;display:none}
+    .thumb-preview-wrap .add-icon{font-family:var(--mono);font-size:.6rem;color:var(--muted);text-align:center;padding:8px}
+
+    /* Progress */
+    .prog-wrap{grid-column:1/-1;display:none}
+    .prog-wrap.show{display:block}
+    .prog-bg{height:4px;background:var(--border2);border-radius:99px;overflow:hidden}
+    .prog-fill{height:100%;background:var(--green);border-radius:99px;width:0%;transition:width .15s}
+    .prog-label{font-family:var(--mono);font-size:.6rem;color:var(--muted);margin-top:6px}
+
+    /* Submit */
+    .submit-row{grid-column:1/-1;display:flex;justify-content:flex-end}
+    .submit-btn{
+      padding:10px 24px;background:var(--green);color:#000;
+      border:none;border-radius:5px;font-family:var(--mono);
+      font-size:.72rem;letter-spacing:.1em;font-weight:700;cursor:pointer;
+      transition:opacity .15s,box-shadow .15s;
+      box-shadow:0 0 14px rgba(0,255,136,.25)
+    }
+    .submit-btn:hover{opacity:.85;box-shadow:0 0 22px rgba(0,255,136,.45)}
+    .submit-btn:disabled{opacity:.4;cursor:not-allowed}
+
+    /* Section */
+    .section-label{font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+    /* Track list */
+    .track-item{
+      background:var(--surface);border:1px solid var(--border);border-left:3px solid transparent;
+      border-radius:6px;padding:12px 16px;display:flex;align-items:center;gap:12px;
+      margin-bottom:6px;transition:border-color .15s
+    }
+    .track-item:hover{border-left-color:var(--green);background:var(--surface2)}
+
+    .track-thumb{width:44px;height:44px;border-radius:6px;flex-shrink:0;overflow:hidden;background:var(--green-dark);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center}
+    .track-thumb img{width:100%;height:100%;object-fit:cover}
+    .track-thumb svg{width:16px;height:16px;fill:var(--green);opacity:.5}
+
+    .track-info{flex:1;min-width:0}
+    .track-name{font-size:.9rem;font-weight:600;color:#ddf0e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .track-desc-preview{font-family:var(--open);font-size:.68rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .track-meta{font-family:var(--mono);font-size:.58rem;color:var(--muted);margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .meta-pill{padding:1px 6px;border:1px solid var(--border2);border-radius:2px;color:var(--green-dim);font-size:.55rem;letter-spacing:.06em}
+
+    .track-btns{display:flex;gap:6px;flex-shrink:0}
+    .edit-btn,.del-btn{
+      width:30px;height:30px;border-radius:5px;flex-shrink:0;
+      background:transparent;cursor:pointer;font-size:.7rem;
+      display:flex;align-items:center;justify-content:center;transition:all .15s
+    }
+    .edit-btn{border:1px solid var(--border2);color:var(--muted)}
+    .edit-btn:hover{border-color:var(--amber);color:var(--amber);background:rgba(255,170,0,.06)}
+    .del-btn{border:1px solid var(--border2);color:var(--muted)}
+    .del-btn:hover{background:rgba(255,60,90,.08);border-color:rgba(255,60,90,.3);color:var(--red)}
+
+    /* Edit modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+    .modal-backdrop.show{display:flex}
+    .modal{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:24px;width:100%;max-width:460px;position:relative}
+    .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:.4}
+    .modal h3{font-family:var(--mono);font-size:.8rem;color:var(--green);letter-spacing:.08em;margin-bottom:18px}
+    .modal .fields{display:flex;flex-direction:column;gap:12px}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+    .mbtn{font-family:var(--mono);font-size:.65rem;padding:7px 16px;border-radius:4px;cursor:pointer;border:1px solid;transition:all .15s}
+    .mbtn-cancel{background:transparent;border-color:var(--border2);color:var(--muted)}
+    .mbtn-cancel:hover{border-color:var(--text);color:var(--text)}
+    .mbtn-save{background:var(--green);border-color:var(--green);color:#000;font-weight:700}
+    .mbtn-save:hover{opacity:.85}
+
+    /* States */
+    .empty{text-align:center;padding:50px;color:var(--muted);font-family:var(--mono);font-size:.72rem}
+    .loading{text-align:center;padding:40px;color:var(--muted);font-family:var(--mono);font-size:.7rem}
+    .spinner{width:24px;height:24px;border:2px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Toast */
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--surface2);border:1px solid var(--border2);color:var(--text);padding:9px 20px;border-radius:5px;font-family:var(--mono);font-size:.7rem;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;z-index:999;letter-spacing:.05em}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    #toast.ok{border-color:rgba(0,255,136,.4);color:var(--green)}
+    #toast.err{border-color:rgba(255,60,90,.4);color:var(--red)}
+
+    @media(max-width:600px){.container{padding:20px 14px}.header-inner{padding:0 14px}.stats-row{flex-wrap:wrap}}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo"><div class="logo-dot"></div>[SEC//CAST]<span class="badge">ADMIN</span></div>
+    <div class="header-actions">
+      <a href="/" class="hbtn hbtn-ghost" target="_blank">VIEW SITE</a>
+      <button class="hbtn hbtn-danger" onclick="logout()">LOGOUT</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="val" id="stat-count">0</div><div class="lbl">TOTAL PODCASTS</div></div>
+    <div class="stat-card"><div class="val" id="stat-size">0 MB</div><div class="lbl">STORAGE USED</div></div>
+    <div class="stat-card"><div class="val" style="color:var(--green-dim)">MP3+</div><div class="lbl">SUPPORTED FORMATS</div></div>
+  </div>
+
+  <!-- Upload card -->
+  <div class="upload-card">
+    <div class="upload-card-header" onclick="toggleUploadForm(this)">
+      <span>⬆ UPLOAD PODCAST MỚI</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="upload-card-body" id="upload-body">
+      <!-- Drop zone -->
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" accept="audio/*">
+        <div class="dz-icon">🎙</div>
+        <div class="dz-label">Kéo thả file audio vào đây hoặc click để chọn</div>
+        <div class="dz-file-name" id="dz-file-name"></div>
+      </div>
+
+      <!-- Title -->
+      <div class="field">
+        <label>TIÊU ĐỀ TẬP</label>
+        <input type="text" id="f-title" placeholder="Ví dụ: Tập 01 — Ransomware là gì?">
+      </div>
+
+      <!-- Thumbnail -->
+      <div class="thumb-field">
+        <label>THUMBNAIL</label>
+        <div class="thumb-preview-wrap" id="thumb-wrap" onclick="document.getElementById('thumb-input').click()">
+          <input type="file" id="thumb-input" accept="image/*">
+          <img id="thumb-preview" alt="">
+          <div class="add-icon" id="thumb-add-icon">+ ẢNH<br>BÌA</div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="field" style="grid-column:1/-1">
+        <label>MÔ TẢ NGẮN</label>
+        <textarea id="f-desc" rows="3" placeholder="Tóm tắt nội dung tập podcast..."></textarea>
+      </div>
+
+      <!-- Tags -->
+      <div class="field" style="grid-column:1/-1">
+        <label>TAGS (cách nhau bằng dấu phẩy)</label>
+        <input type="text" id="f-tags" placeholder="ransomware, windows, phishing">
+      </div>
+
+      <!-- Progress -->
+      <div class="prog-wrap" id="prog-area">
+        <div class="prog-bg"><div class="prog-fill" id="prog-fill"></div></div>
+        <div class="prog-label" id="prog-label">Đang upload...</div>
+      </div>
+
+      <!-- Submit -->
+      <div class="submit-row">
+        <button class="submit-btn" id="submit-btn" onclick="submitUpload()">UPLOAD &amp; PUBLISH</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- List -->
+  <p class="section-label">DANH SÁCH PODCAST</p>
+  <div id="list"><div class="loading"><div class="spinner"></div><p>ĐANG TẢI...</p></div></div>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-backdrop" id="edit-modal">
+  <div class="modal">
+    <h3>// CHỈNH SỬA METADATA</h3>
+    <input type="hidden" id="edit-filename">
+    <div class="fields">
+      <div class="field"><label>TIÊU ĐỀ</label><input type="text" id="edit-title"></div>
+      <div class="field"><label>MÔ TẢ</label><textarea id="edit-desc" rows="3"></textarea></div>
+      <div class="field"><label>TAGS</label><input type="text" id="edit-tags" placeholder="tag1, tag2, tag3"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-cancel" onclick="closeEdit()">HỦY</button>
+      <button class="mbtn mbtn-save" onclick="saveEdit()">LƯU</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let tracks = [];
+let selectedFile = null, selectedThumb = null;
+
+// ── Toggle upload form ────────────────────────────────────────────────────────
+function toggleUploadForm(header) {
+  const body = document.getElementById('upload-body');
+  header.classList.toggle('collapsed');
+  body.style.display = header.classList.contains('collapsed') ? 'none' : 'grid';
+}
+
+// ── File inputs ───────────────────────────────────────────────────────────────
+document.getElementById('file-input').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  selectedFile = f;
+  document.getElementById('dz-file-name').textContent = '✓ ' + f.name;
+  // Auto fill title if empty
+  if (!document.getElementById('f-title').value) {
+    document.getElementById('f-title').value = f.name.replace(/\.[^.]+$/,'').replace(/^\d+_/,'');
+  }
+});
+
+document.getElementById('thumb-input').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  selectedThumb = f;
+  const url = URL.createObjectURL(f);
+  const img = document.getElementById('thumb-preview');
+  img.src = url; img.style.display = 'block';
+  document.getElementById('thumb-add-icon').style.display = 'none';
+});
+
+// Drag & drop
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f && /audio/.test(f.type)) {
+    selectedFile = f;
+    document.getElementById('dz-file-name').textContent = '✓ ' + f.name;
+    if (!document.getElementById('f-title').value)
+      document.getElementById('f-title').value = f.name.replace(/\.[^.]+$/,'').replace(/^\d+_/,'');
+  }
+});
+
+// ── Submit upload ─────────────────────────────────────────────────────────────
+async function submitUpload() {
+  if (!selectedFile) { toast('[ERROR] Chưa chọn file audio', 'err'); return; }
+  const btn = document.getElementById('submit-btn');
+  const pa  = document.getElementById('prog-area');
+  const pf  = document.getElementById('prog-fill');
+  const pl  = document.getElementById('prog-label');
+  btn.disabled = true; pa.classList.add('show'); pf.style.width='0%';
+
+  const fd = new FormData();
+  fd.append('audio', selectedFile);
+  if (selectedThumb) fd.append('thumbnail', selectedThumb);
+  fd.append('title',       document.getElementById('f-title').value.trim() || selectedFile.name);
+  fd.append('description', document.getElementById('f-desc').value.trim());
+  fd.append('tags',        document.getElementById('f-tags').value.trim());
+
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/admin/upload');
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable) {
+        const p = Math.round(e.loaded/e.total*100);
+        pf.style.width = p+'%';
+        pl.textContent = `Uploading... ${p}%`;
+      }
+    };
+    xhr.onload = () => {
+      pa.classList.remove('show'); btn.disabled = false;
+      const d = JSON.parse(xhr.responseText);
+      if (xhr.status===200) {
+        toast('[OK] '+d.message, 'ok');
+        // Reset form
+        selectedFile = null; selectedThumb = null;
+        document.getElementById('file-input').value='';
+        document.getElementById('thumb-input').value='';
+        document.getElementById('dz-file-name').textContent='';
+        document.getElementById('f-title').value='';
+        document.getElementById('f-desc').value='';
+        document.getElementById('f-tags').value='';
+        document.getElementById('thumb-preview').style.display='none';
+        document.getElementById('thumb-add-icon').style.display='';
+        loadTracks();
+      } else { toast('[ERROR] '+d.error, 'err'); }
+      resolve();
+    };
+    xhr.onerror = () => { pa.classList.remove('show'); btn.disabled=false; toast('[ERROR] Network error','err'); resolve(); };
+    xhr.send(fd);
+  });
+}
+
+// ── Load tracks ───────────────────────────────────────────────────────────────
+async function loadTracks() {
+  try {
+    const res = await fetch('/api/tracks');
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    tracks = data.tracks || [];
+    renderList();
+    document.getElementById('stat-count').textContent = tracks.length;
+    const totalBytes = tracks.reduce((a,t)=>a+t.size,0);
+    document.getElementById('stat-size').textContent =
+      totalBytes>1048576 ? (totalBytes/1048576).toFixed(1)+' MB' : (totalBytes/1024).toFixed(0)+' KB';
+  } catch(err) {
+    document.getElementById('list').innerHTML=`<div class="empty">// [ERROR] Không thể kết nối Supabase</div>`;
+  }
+}
+
+function fmtSize(b){ return b>1048576?(b/1048576).toFixed(1)+' MB':(b/1024).toFixed(0)+' KB'; }
+function fmtDate(d){ return new Date(d).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function esc(s)    { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderList() {
+  const el = document.getElementById('list');
+  if (!tracks.length) { el.innerHTML=`<div class="empty">// No podcasts yet</div>`; return; }
+  el.innerHTML = tracks.map((t,i) => {
+    const tagPills = (t.tags||[]).map(tag=>`<span class="meta-pill">${esc(tag)}</span>`).join('');
+    const thumbHTML = t.thumbnail
+      ? `<img src="${esc(t.thumbnail)}" alt="">`
+      : `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>`;
+    return `
+    <div class="track-item" id="ti-${i}">
+      <div class="track-thumb">${thumbHTML}</div>
+      <div class="track-info">
+        <div class="track-name">EP${String(i+1).padStart(2,'0')} — ${esc(t.displayName)}</div>
+        ${t.description?`<div class="track-desc-preview">${esc(t.description)}</div>`:''}
+        <div class="track-meta">
+          <span>${fmtSize(t.size)}</span>
+          <span>UPLOADED ${fmtDate(t.uploadedAt)}</span>
+          ${tagPills}
+        </div>
+      </div>
+      <div class="track-btns">
+        <button class="edit-btn" onclick="openEdit(${i})" title="Sửa metadata">✏</button>
+        <button class="del-btn"  onclick="deleteTrack(${i})" title="Xóa">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Delete ────────────────────────────────────────────────────────────────────
+async function deleteTrack(idx) {
+  const t = tracks[idx];
+  if (!confirm(`Xóa "${t.displayName}"?`)) return;
+  const res = await fetch(`/admin/tracks/${encodeURIComponent(t.filename)}`, {method:'DELETE'});
+  if (res.ok) { toast('[OK] Đã xóa','ok'); loadTracks(); }
+  else toast('[ERROR] Xóa thất bại','err');
+}
+
+// ── Edit modal ────────────────────────────────────────────────────────────────
+function openEdit(idx) {
+  const t = tracks[idx];
+  document.getElementById('edit-filename').value = t.filename;
+  document.getElementById('edit-title').value    = t.displayName;
+  document.getElementById('edit-desc').value     = t.description||'';
+  document.getElementById('edit-tags').value     = (t.tags||[]).join(', ');
+  document.getElementById('edit-modal').classList.add('show');
+}
+function closeEdit() { document.getElementById('edit-modal').classList.remove('show'); }
+
+async function saveEdit() {
+  const filename    = document.getElementById('edit-filename').value;
+  const title       = document.getElementById('edit-title').value.trim();
+  const description = document.getElementById('edit-desc').value.trim();
+  const tags        = document.getElementById('edit-tags').value.trim();
+  const res = await fetch(`/admin/episodes/${encodeURIComponent(filename)}`, {
+    method:'PUT', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({title,description,tags})
+  });
+  if (res.ok) { toast('[OK] Đã lưu metadata','ok'); closeEdit(); loadTracks(); }
+  else toast('[ERROR] Lưu thất bại','err');
+}
+
+// Close modal on backdrop click
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+  if (e.target===this) closeEdit();
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent=msg; el.className='show '+type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.className=''; },3200);
+}
+
+async function logout() {
+  await fetch('/admin/logout',{method:'POST'});
+  window.location.href='/admin/login';
+}
+
+loadTracks();
+</script>
+</body>
+</html>
