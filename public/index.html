@@ -103,7 +103,8 @@
 
     /* Track info */
     .track-info{flex:1;min-width:0}
-    .track-name{font-size:.98rem;font-weight:600;color:#ddf0e8;letter-spacing:.01em;overflow:hidden}
+    .track-name{font-size:.98rem;font-weight:600;color:#ddf0e8;letter-spacing:.01em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .track-item.active .track-name{text-overflow:clip}
     .track-name-inner{display:inline-block;white-space:nowrap}
     .track-name-inner.marquee{animation:marquee-scroll var(--dur,8s) linear infinite}
     @keyframes marquee-scroll{0%{transform:translateX(0)}100%{transform:translateX(var(--dist,-100%))}}
@@ -530,8 +531,17 @@ function renderList() {
       </div>
     </div>`;
   }).join('');
-  // Khởi tạo marquee sau khi DOM đã render
-  requestAnimationFrame(initAllMarquees);
+  // Chỉ init marquee cho track đang active (nếu có)
+  if (currentIdx >= 0) {
+    requestAnimationFrame(() => {
+      const activeEl = document.getElementById('track-' + currentIdx);
+      if (activeEl) {
+        const container = activeEl.querySelector('.track-name');
+        const inner     = activeEl.querySelector('.track-name-inner');
+        initMarquee(container, inner);
+      }
+    });
+  }
 }
 
 // ── Playback ──────────────────────────────────────────────────────────────────
