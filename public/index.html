@@ -103,7 +103,10 @@
 
     /* Track info */
     .track-info{flex:1;min-width:0}
-    .track-name{font-size:.98rem;font-weight:600;color:#ddf0e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.01em}
+    .track-name{font-size:.98rem;font-weight:600;color:#ddf0e8;letter-spacing:.01em;overflow:hidden}
+    .track-name-inner{display:inline-block;white-space:nowrap}
+    .track-name-inner.marquee{animation:marquee-scroll var(--dur,8s) linear infinite}
+    @keyframes marquee-scroll{0%{transform:translateX(0)}100%{transform:translateX(var(--dist,-100%))}}
     .track-desc{font-family:var(--open);font-size:.72rem;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4}
     .track-meta{display:flex;gap:8px;margin-top:5px;align-items:center;flex-wrap:wrap}
     .meta-size{font-family:var(--mono);font-size:.6rem;color:var(--muted2)}
@@ -158,7 +161,9 @@
 
     .player-text{flex:1;min-width:0}
     .player-lbl{font-family:var(--mono);font-size:.55rem;color:var(--muted);letter-spacing:.12em}
-    .player-title{font-size:.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .player-title{font-size:.88rem;font-weight:600;color:var(--text);overflow:hidden}
+    .player-title-inner{display:inline-block;white-space:nowrap}
+    .player-title-inner.marquee{animation:marquee-scroll var(--dur,8s) linear infinite}
 
     /* Share button in player */
     .player-share-btn{
@@ -345,7 +350,7 @@
       </div>
       <div class="player-text">
         <div class="player-lbl">// ĐANG PHÁT</div>
-        <div class="player-title" id="now-title">—</div>
+        <div class="player-title" id="now-title"><span class="player-title-inner" id="now-title-inner">—</span></div>
       </div>
       <!-- Share button — in player -->
       <button class="player-share-btn" id="player-share-btn" onclick="shareCurrentTrack()" title="Chia sẻ tập này">
@@ -404,7 +409,39 @@
 // ── Elements ──────────────────────────────────────────────────────────────────
 const audio     = document.getElementById('audio-el');
 const playerBar = document.getElementById('player-bar');
-const nowTitle  = document.getElementById('now-title');
+const nowTitle      = document.getElementById('now-title');
+const nowTitleInner = document.getElementById('now-title-inner');
+
+// Khởi tạo marquee cho 1 element nếu text bị tràn
+function initMarquee(container, inner) {
+  if (!container || !inner) return;
+  inner.classList.remove('marquee');
+  inner.style.removeProperty('--dur');
+  inner.style.removeProperty('--dist');
+  // Đo sau 1 frame để layout ổn định
+  requestAnimationFrame(() => {
+    const cw = container.offsetWidth;
+    const tw = inner.scrollWidth;
+    if (tw > cw + 4) {
+      const gap = 48; // khoảng cách giữa 2 lần lặp
+      const dist = -(tw + gap);
+      const dur  = Math.max(6, tw / 50); // tốc độ ~50px/s, tối thiểu 6s
+      inner.style.setProperty('--dist', dist + 'px');
+      inner.style.setProperty('--dur',  dur  + 's');
+      // Thêm text lặp lại ở cuối (tạo hiệu ứng liên tục)
+      inner.setAttribute('data-suffix', '\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0' + inner.getAttribute('data-text'));
+      inner.classList.add('marquee');
+    }
+  });
+}
+
+// Chạy marquee cho tất cả track-name sau khi render
+function initAllMarquees() {
+  document.querySelectorAll('.track-name').forEach(container => {
+    const inner = container.querySelector('.track-name-inner');
+    initMarquee(container, inner);
+  });
+}
 const seekBar   = document.getElementById('seek-bar');
 const timeCur   = document.getElementById('time-cur');
 const timeDur   = document.getElementById('time-dur');
@@ -484,7 +521,7 @@ function renderList() {
       <span class="track-num">EP${String(i+1).padStart(2,'0')}</span>
       <div class="track-thumb">${thumbInner}</div>
       <div class="track-info">
-        <div class="track-name">${esc(t.displayName)}</div>
+        <div class="track-name"><span class="track-name-inner" data-text="${esc(t.displayName)}">${esc(t.displayName)}</span></div>
         ${t.description ? `<div class="track-desc">${esc(t.description)}</div>` : ''}
         <div class="track-meta">
           <span class="meta-size">${fmtSize(t.size)}</span>
@@ -493,6 +530,8 @@ function renderList() {
       </div>
     </div>`;
   }).join('');
+  // Khởi tạo marquee sau khi DOM đã render
+  requestAnimationFrame(initAllMarquees);
 }
 
 // ── Playback ──────────────────────────────────────────────────────────────────
@@ -521,7 +560,9 @@ function playTrack(idx) {
     playerThumbImg.style.display = 'none';
     playerThumbIcon.style.display = '';
   }
-  nowTitle.textContent = t.displayName;
+  nowTitleInner.textContent = t.displayName;
+  nowTitleInner.setAttribute('data-text', t.displayName);
+  initMarquee(nowTitle, nowTitleInner);
   playerBar.classList.add('visible');
   document.body.classList.add('player-open');
   renderList();
