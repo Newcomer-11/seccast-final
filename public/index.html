@@ -162,9 +162,8 @@
 
     .player-text{flex:1;min-width:0}
     .player-lbl{font-family:var(--mono);font-size:.55rem;color:var(--muted);letter-spacing:.12em}
-    .player-title{font-size:.88rem;font-weight:600;color:var(--text);overflow:hidden}
+    .player-title{font-size:.88rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .player-title-inner{display:inline-block;white-space:nowrap}
-    .player-title-inner.marquee{animation:marquee-scroll var(--dur,8s) linear infinite}
 
     /* Share button in player */
     .player-share-btn{
@@ -413,25 +412,42 @@ const playerBar = document.getElementById('player-bar');
 const nowTitle      = document.getElementById('now-title');
 const nowTitleInner = document.getElementById('now-title-inner');
 
-// Khởi tạo marquee cho 1 element nếu text bị tràn
+// Khởi tạo marquee cho track-name — duplicate text tạo vòng lặp liền mạch
 function initMarquee(container, inner) {
   if (!container || !inner) return;
+  // Reset
   inner.classList.remove('marquee');
   inner.style.removeProperty('--dur');
   inner.style.removeProperty('--dist');
-  // Đo sau 1 frame để layout ổn định
+  // Xóa bản duplicate cũ nếu có
+  const oldClone = inner.querySelector('.marquee-clone');
+  if (oldClone) oldClone.remove();
+
   requestAnimationFrame(() => {
     const cw = container.offsetWidth;
     const tw = inner.scrollWidth;
     if (tw > cw + 4) {
-      const gap = 48; // khoảng cách giữa 2 lần lặp
-      const dist = -(tw + gap);
-      const dur  = Math.max(6, tw / 50); // tốc độ ~50px/s, tối thiểu 6s
-      inner.style.setProperty('--dist', dist + 'px');
-      inner.style.setProperty('--dur',  dur  + 's');
-      // Thêm text lặp lại ở cuối (tạo hiệu ứng liên tục)
-      inner.setAttribute('data-suffix', '\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0' + inner.getAttribute('data-text'));
-      inner.classList.add('marquee');
+      // Tạo bản clone nối ngay sau text gốc với khoảng cách nhỏ
+      const sep = '    •    '; // " • "
+      const clone = document.createElement('span');
+      clone.className = 'marquee-clone';
+      clone.textContent = sep + inner.getAttribute('data-text');
+      clone.style.cssText = 'white-space:nowrap';
+      inner.appendChild(clone);
+
+      // Đo lại sau khi thêm clone
+      requestAnimationFrame(() => {
+        const fullW = inner.scrollWidth; // text gốc + sep + clone
+        // dist = chiều rộng của 1 đơn vị lặp (text gốc + sep)
+        const unitW = tw + clone.textContent.length * 7; // ước lượng sep width
+        // Dùng scrollWidth thực sau render
+        const dist = -(tw + (fullW - tw) / 1); // scroll đúng 1 unit
+        // Tốc độ chậm: ~35px/s, tối thiểu 10s
+        const dur = Math.max(10, tw / 35);
+        inner.style.setProperty('--dist', dist + 'px');
+        inner.style.setProperty('--dur',  dur  + 's');
+        inner.classList.add('marquee');
+      });
     }
   });
 }
@@ -571,8 +587,6 @@ function playTrack(idx) {
     playerThumbIcon.style.display = '';
   }
   nowTitleInner.textContent = t.displayName;
-  nowTitleInner.setAttribute('data-text', t.displayName);
-  initMarquee(nowTitle, nowTitleInner);
   playerBar.classList.add('visible');
   document.body.classList.add('player-open');
   renderList();
