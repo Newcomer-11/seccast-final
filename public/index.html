@@ -122,7 +122,7 @@
       letter-spacing:.08em;
     }
     html{scroll-behavior:smooth}
-    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
     body.player-open .site-footer{padding-bottom:110px}
 
     body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
@@ -141,9 +141,17 @@
     .badge{padding:2px 8px;border:1px solid var(--border2);border-radius:3px;color:var(--green-dim);font-size:.6rem;letter-spacing:.1em}
     .badge.live{border-color:var(--green);color:var(--green);animation:blink 1.6s infinite}
 
+
+    /* ── Sticky footer: wrapper bao main + footer chiếm full height ── */
+    .page-wrapper{
+      min-height:calc(100vh - 58px); /* 58px = header height */
+      display:flex;
+      flex-direction:column;
+    }
+    .page-wrapper main{flex:1;}
     /* ── Layout ── */
     .container{max-width:1000px;margin:0 auto;padding:0 28px;position:relative;z-index:1}
-    main.container{padding-bottom:0;flex:1;}
+    main.container{padding-bottom:0;}
 
     /* ── Hero ── */
     .hero{padding:40px 0 32px;border-bottom:1px solid var(--border);margin-bottom:30px}
@@ -417,6 +425,7 @@
   </div>
 </header>
 
+<div class="page-wrapper">
 <main class="container">
   <div class="hero">
     <div class="hero-eyebrow">PODCAST · BẢO MẬT THÔNG TIN</div>
@@ -462,6 +471,7 @@
 
   </div>
 </footer>
+</div><!-- /.page-wrapper -->
 
 <!-- Player Bar -->
 <div id="player-bar">
