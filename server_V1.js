@@ -2,14 +2,12 @@ const express = require('express');
 const multer  = require('multer');
 const session = require('express-session');
 const path    = require('path');
-const ws      = require('ws');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const ADMIN_PASSWORD  = process.env.ADMIN_PASSWORD  || 'admin123';
-const SITE_PASSWORD   = process.env.SITE_PASSWORD   || '';  // để trống = không cần mật khẩu
 const SUPABASE_URL    = process.env.SUPABASE_URL    || '';
 const SUPABASE_KEY    = process.env.SUPABASE_KEY    || '';
 const SUPABASE_BUCKET = process.env.SUPABASE_BUCKET || 'podcasts';
@@ -22,8 +20,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 const { createClient } = require('@supabase/supabase-js');
 const supabase = createClient(
   SUPABASE_URL || 'https://placeholder.supabase.co',
-  SUPABASE_KEY || 'placeholder-key',
-  { realtime: { transport: ws } }
+  SUPABASE_KEY || 'placeholder-key'
 );
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
@@ -150,18 +147,6 @@ ensureTable();
 app.get('/', (req, res) => {
   logVisitor(req);
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Verify site password — không trả về password, chỉ true/false
-app.post('/api/verify-password', (req, res) => {
-  if (!SITE_PASSWORD) return res.json({ ok: true }); // không config = mở tự do
-  const { password } = req.body;
-  res.json({ ok: password === SITE_PASSWORD });
-});
-
-// Kiểm tra xem site có cần password không
-app.get('/api/site-config', (req, res) => {
-  res.json({ requirePassword: !!SITE_PASSWORD });
 });
 
 app.get('/api/tracks', async (req, res) => {
