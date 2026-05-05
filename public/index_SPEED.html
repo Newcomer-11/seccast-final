@@ -230,7 +230,8 @@
       position:fixed;bottom:0;left:0;right:0;z-index:200;
       background:var(--player-bg);border-top:1px solid var(--border2);
       backdrop-filter:blur(24px);
-      transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1)
+      transform:translateY(100%);transition:transform .4s cubic-bezier(.16,1,.3,1);
+      overflow:visible
     }
     #player-bar.visible{transform:translateY(0)}
     #player-bar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:.5}
@@ -372,6 +373,62 @@
     html.light .icon-moon{opacity:0}
     html.light .icon-sun {opacity:1}
 
+
+    /* ── Speed slider popup ── */
+    .speed-wrap{position:relative}
+    .speed-wrap-mobile{display:none}
+    .speed-popup{
+      position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+      background:var(--surface);border:1px solid var(--border2);border-radius:10px;
+      padding:14px 16px;width:200px;box-shadow:0 8px 32px rgba(0,0,0,.18);
+      display:none;z-index:400;
+    }
+    .speed-popup.open{display:block}
+    .speed-popup::after{
+      content:'';position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);
+      width:10px;height:10px;background:var(--surface);border-right:1px solid var(--border2);
+      border-bottom:1px solid var(--border2);transform:translateX(-50%) rotate(45deg);
+    }
+    .speed-popup-label{
+      font-family:var(--mono);font-size:.58rem;color:var(--muted);
+      letter-spacing:.1em;margin-bottom:10px;display:flex;justify-content:space-between;
+    }
+    .speed-popup-label span{color:var(--green);font-size:.72rem}
+    .speed-slider{
+      -webkit-appearance:none;width:100%;height:4px;border-radius:99px;
+      background:var(--border2);outline:none;cursor:pointer;
+    }
+    .speed-slider::-webkit-slider-thumb{
+      -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+      background:var(--green);box-shadow:0 0 6px var(--shadow-green);cursor:pointer;
+    }
+    .speed-presets{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
+    .speed-preset{
+      font-family:var(--mono);font-size:.6rem;padding:3px 7px;
+      border:1px solid var(--border2);border-radius:4px;background:transparent;
+      color:var(--muted);cursor:pointer;transition:all .12s;
+    }
+    .speed-preset:hover{border-color:var(--green);color:var(--green)}
+    .speed-preset.active{background:var(--green);border-color:var(--green);color:#000}
+
+    /* ── Progress bar dưới mỗi track item ── */
+    .track-progress{
+      position:absolute;bottom:0;left:0;height:2px;
+      background:var(--green);border-radius:0 2px 2px 0;
+      opacity:.6;pointer-events:none;transition:width .3s;
+    }
+    .track-progress-bg{
+      position:absolute;bottom:0;left:0;right:0;height:2px;
+      background:var(--border2);pointer-events:none;
+      display:none;
+    }
+    .track-item.has-progress .track-progress-bg{display:block}
+    .track-resume-badge{
+      font-family:var(--mono);font-size:.55rem;color:var(--amber);
+      border:1px solid rgba(255,170,0,.3);border-radius:3px;
+      padding:1px 6px;letter-spacing:.06em;white-space:nowrap;flex-shrink:0;
+    }
+
     /* Responsive */
     @media(max-width:680px){
       .footer-inner{grid-template-columns:1fr;gap:20px;padding:28px 14px 20px}
@@ -379,6 +436,7 @@
     }
       .player-inner{grid-template-columns:1fr;padding:10px 16px}
       .player-right{display:none}
+      .speed-wrap-mobile{display:flex}
       .progress-row{width:260px}
       .header-right span:not(.badge){display:none}
       .container{padding:0 14px}
@@ -516,6 +574,24 @@
         <button class="cbtn" id="btn-loop" onclick="toggleLoop()" title="Lặp lại">
           <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
         </button>
+        <!-- Speed button mobile — hiển thị trong ctrl-row -->
+        <div class="speed-wrap speed-wrap-mobile" id="speed-wrap-mobile">
+          <button class="speed-btn" onclick="toggleSpeedPopup('mobile')" id="speed-btn-mobile">1.0×</button>
+          <div class="speed-popup" id="speed-popup-mobile">
+            <div class="speed-popup-label">TỐC ĐỘ PHÁT <span id="speed-display-mobile">1.0×</span></div>
+            <input type="range" class="speed-slider" id="speed-slider-mobile"
+              min="0.5" max="2.5" step="0.05" value="1"
+              oninput="onSpeedSlider(this.value)">
+            <div class="speed-presets">
+              <button class="speed-preset active" onclick="setSpeed(0.75)">0.75×</button>
+              <button class="speed-preset" onclick="setSpeed(1)">1×</button>
+              <button class="speed-preset" onclick="setSpeed(1.25)">1.25×</button>
+              <button class="speed-preset" onclick="setSpeed(1.5)">1.5×</button>
+              <button class="speed-preset" onclick="setSpeed(1.75)">1.75×</button>
+              <button class="speed-preset" onclick="setSpeed(2)">2×</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="progress-row">
         <span class="ttime" id="time-cur">0:00</span>
@@ -526,7 +602,23 @@
 
     <!-- Right: speed + volume -->
     <div class="player-right">
-      <button class="speed-btn" id="speed-btn" onclick="cycleSpeed()">1.0×</button>
+      <div class="speed-wrap" id="speed-wrap">
+        <button class="speed-btn" id="speed-btn" onclick="toggleSpeedPopup()">1.0×</button>
+        <div class="speed-popup" id="speed-popup">
+          <div class="speed-popup-label">TỐC ĐỘ PHÁT <span id="speed-display">1.0×</span></div>
+          <input type="range" class="speed-slider" id="speed-slider"
+            min="0.5" max="2.5" step="0.05" value="1"
+            oninput="onSpeedSlider(this.value)">
+          <div class="speed-presets">
+            <button class="speed-preset active" onclick="setSpeed(0.75)">0.75×</button>
+            <button class="speed-preset" onclick="setSpeed(1)">1×</button>
+            <button class="speed-preset" onclick="setSpeed(1.25)">1.25×</button>
+            <button class="speed-preset" onclick="setSpeed(1.5)">1.5×</button>
+            <button class="speed-preset" onclick="setSpeed(1.75)">1.75×</button>
+            <button class="speed-preset" onclick="setSpeed(2)">2×</button>
+          </div>
+        </div>
+      </div>
       <div class="vol-row">
         <span class="vol-icon">VOL</span>
         <input type="range" id="vol-bar" value="100" min="0" max="100" oninput="setVolume(this.value)">
@@ -670,8 +762,16 @@ function renderList() {
          ${showWave ? `<div class="waveform-overlay">${waveformBars()}</div>` : ''}`
       : `<div class="thumb-default"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></div>
            ${showWave ? `<div class="waveform-overlay">${waveformBars()}</div>` : ''}`;
+    // Lấy tiến độ đã lưu
+    const prog     = getProgress(t.filename);
+    const hasProg  = prog > 0;
+    const progPct  = hasProg && t.duration ? Math.min(100, prog / t.duration * 100) : 0;
+    const progTime = hasProg ? `TIẾP TỤC ${fmt(prog)}` : '';
+
     return `
-    <div class="track-item${isActive?' active':''}" id="track-${i}" onclick="playTrack(${i})">
+    <div class="track-item${isActive?' active':''}${hasProg?' has-progress':''}" id="track-${i}" onclick="playTrack(${i})">
+      <div class="track-progress-bg"></div>
+      ${hasProg ? `<div class="track-progress" style="width:${progPct}%"></div>` : ''}
       <span class="track-num">EP${String(i+1).padStart(2,'0')}</span>
       <div class="track-thumb">${thumbInner}</div>
       <div class="track-info">
@@ -679,6 +779,7 @@ function renderList() {
         ${t.description ? `<div class="track-desc">${esc(t.description)}</div>` : ''}
         <div class="track-meta">
           <span class="meta-size">${fmtSize(t.size)}</span>
+          ${hasProg && !isActive ? `<span class="track-resume-badge">${progTime}</span>` : ''}
           ${tagPills || '<span class="meta-pill">INFOSEC</span>'}
         </div>
       </div>
@@ -707,6 +808,14 @@ function playTrack(idx) {
   if (!same) {
     audio.src = t.url;
     audio.load();
+    // Restore tiến độ nếu có
+    const savedTime = getProgress(t.filename);
+    if (savedTime > 5) {
+      audio.addEventListener('loadedmetadata', function onMeta() {
+        audio.currentTime = savedTime;
+        audio.removeEventListener('loadedmetadata', onMeta);
+      });
+    }
     audio.play().catch(e => console.warn('play():', e.message));
   } else {
     audio.paused
@@ -753,12 +862,59 @@ function seek(v)     { if (audio.duration) audio.currentTime = audio.duration * 
 function setVolume(v){ audio.volume = v / 100; }
 function toggleShuffle(){ shuffle = !shuffle; document.getElementById('btn-shuffle').classList.toggle('on', shuffle); }
 function toggleLoop()   { loop = !loop; audio.loop = loop; document.getElementById('btn-loop').classList.toggle('on', loop); }
-function cycleSpeed() {
-  speedIdx = (speedIdx + 1) % speeds.length;
-  audio.playbackRate = speeds[speedIdx];
-  const s = speeds[speedIdx];
-  document.getElementById('speed-btn').textContent = (s===1?'1.0':s%1===0?s.toFixed(1):s.toFixed(2)) + '×';
+// ── Speed slider ─────────────────────────────────────────────────────────────
+const SPEED_KEY = 'seccast_speed';
+
+function toggleSpeedPopup(which) {
+  // Đóng cả 2 trước
+  document.getElementById('speed-popup').classList.remove('open');
+  document.getElementById('speed-popup-mobile').classList.remove('open');
+  // Mở đúng cái được click
+  const id = which === 'mobile' ? 'speed-popup-mobile' : 'speed-popup';
+  document.getElementById(id).classList.toggle('open');
 }
+
+function setSpeed(val) {
+  val = Math.round(val * 100) / 100;
+  audio.playbackRate = val;
+  const label = val.toFixed(val % 1 === 0 ? 1 : 2) + '×';
+  // Sync tất cả các element speed
+  ['speed-btn','speed-btn-mobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+  ['speed-display','speed-display-mobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  });
+  ['speed-slider','speed-slider-mobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+  document.querySelectorAll('.speed-preset').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.textContent) === val);
+  });
+  localStorage.setItem(SPEED_KEY, val);
+}
+
+function onSpeedSlider(val) { setSpeed(parseFloat(val)); }
+
+// Đóng popup khi click ra ngoài
+document.addEventListener('click', e => {
+  ['speed-wrap','speed-wrap-mobile'].forEach(id => {
+    const wrap = document.getElementById(id);
+    if (wrap && !wrap.contains(e.target)) {
+      const popup = wrap.querySelector('.speed-popup');
+      if (popup) popup.classList.remove('open');
+    }
+  });
+});
+
+// Restore speed từ localStorage
+(function(){
+  const saved = parseFloat(localStorage.getItem(SPEED_KEY) || '1');
+  if (saved && saved !== 1) setSpeed(saved);
+})();
 
 // ── Share ─────────────────────────────────────────────────────────────────────
 function shareCurrentTrack() {
@@ -804,7 +960,44 @@ audio.addEventListener('pause', () => {
   playerViz.classList.remove('active');
   renderList();
 });
-audio.addEventListener('ended', () => { if (!loop) nextTrack(); });
+audio.addEventListener('ended', () => {
+  // Xóa tiến độ khi nghe xong
+  if (currentIdx >= 0) saveProgress(tracks[currentIdx].filename, 0);
+  if (!loop) nextTrack();
+});
+
+// ── Progress tracking ─────────────────────────────────────────────────────────
+const PROG_KEY = 'seccast_progress';
+
+function getAllProgress() {
+  try { return JSON.parse(localStorage.getItem(PROG_KEY) || '{}'); } catch { return {}; }
+}
+function getProgress(filename) {
+  return getAllProgress()[filename] || 0;
+}
+function saveProgress(filename, time) {
+  const all = getAllProgress();
+  if (time < 5) { delete all[filename]; } // bỏ nếu < 5 giây
+  else { all[filename] = Math.floor(time); }
+  localStorage.setItem(PROG_KEY, JSON.stringify(all));
+}
+
+// Lưu tiến độ mỗi 5 giây
+let lastSavedTime = 0;
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration || currentIdx < 0) return;
+  // Lưu mỗi 5s hoặc khi seek
+  if (Math.abs(audio.currentTime - lastSavedTime) >= 5) {
+    lastSavedTime = audio.currentTime;
+    saveProgress(tracks[currentIdx].filename, audio.currentTime);
+  }
+});
+
+// Lưu khi thoát trang
+window.addEventListener('beforeunload', () => {
+  if (currentIdx >= 0 && audio.currentTime > 5)
+    saveProgress(tracks[currentIdx].filename, audio.currentTime);
+});
 
 // ── Clock ─────────────────────────────────────────────────────────────────────
 setInterval(() => {
