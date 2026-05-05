@@ -799,7 +799,7 @@ async function submitGate() {
     });
     const data = await res.json();
     if (data.ok) {
-      //sessionStorage.setItem(ACCESS_KEY, '1');
+      sessionStorage.setItem(ACCESS_KEY, '1');
       const gate = document.getElementById('access-gate');
       gate.style.transition = 'opacity .4s';
       gate.style.opacity = '0';
