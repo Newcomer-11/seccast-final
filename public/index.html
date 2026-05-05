@@ -121,10 +121,8 @@
       font-family:var(--mono);font-size:.55rem;color:var(--muted2);
       letter-spacing:.08em;
     }
-    html{scroll-behavior:smooth;height:100%}
-    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100%;overflow-x:hidden;display:grid;grid-template-rows:auto auto 1fr auto;grid-template-columns:100%}
-    /* body::before/after là position:fixed — không tham gia grid flow */
-    /* Thứ tự grid rows: #access-gate(auto) header(auto) main(1fr=fill) footer(auto) */
+    html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;display:flex;flex-direction:column;}
     body.player-open .site-footer{padding-bottom:110px}
 
     body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
@@ -145,7 +143,7 @@
 
     /* ── Layout ── */
     .container{max-width:1000px;margin:0 auto;padding:0 28px;position:relative;z-index:1}
-    main.container{padding-bottom:0}
+    main.container{padding-bottom:0;flex:1;}
 
     /* ── Hero ── */
     .hero{padding:40px 0 32px;border-bottom:1px solid var(--border);margin-bottom:30px}
@@ -393,7 +391,7 @@
 <!-- Access Gate -->
 <div id="access-gate">
   <div class="gate-box">
-    <div class="gate-logo"><div class="gate-logo-dot"></div>[IT SECURITY PODCAST]</div>
+    <div class="gate-logo"><div class="gate-logo-dot"></div>[SECURITY PODCAST]</div>
     <div class="gate-sub"></div>
     <div class="gate-label">VUI LÒNG NHẬP MẬT KHẨU ĐỂ TRUY CẬP</div>
     <div class="gate-input-wrap">
@@ -410,7 +408,7 @@
 
 <header>
   <div class="header-inner">
-    <div class="logo"><div class="logo-dot"></div>[IT SECURITY PODCAST]</div>
+    <div class="logo"><div class="logo-dot"></div>[SECURITY PODCAST]</div>
     <div class="header-right">
       <span id="sys-clock"></span>
       <span class="badge live">● LIVE</span>
@@ -441,7 +439,7 @@
 
     <!-- Brand -->
     <div class="footer-brand">
-      <div class="logo"><div class="logo-dot"></div>[IT SECURIRY PODCAST]</div>
+      <div class="logo"><div class="logo-dot"></div>[SECURIRY PODCAST]</div>
       <p>Podcast bảo mật thông tin tiếng Việt — cập nhật các mối đe dọa mạng, an ninh doanh nghiệp, tin tức an ninh mạng mới nhất.</p>
     </div>
 
