@@ -760,9 +760,9 @@ const ACCESS_KEY = 'seccast_access';
 
 async function initGate() {
   // Nếu đã unlock trong session này thì bỏ qua
-  //if (sessionStorage.getItem(ACCESS_KEY) === '1') {
-  //  document.getElementById('access-gate').classList.add('hidden');
-  //  return;
+  if (sessionStorage.getItem(ACCESS_KEY) === '1') {
+    document.getElementById('access-gate').classList.add('hidden');
+    return;
   }
   // Hỏi server xem có cần password không
   try {
