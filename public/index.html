@@ -147,13 +147,12 @@
     main.container{padding-bottom:0;}
 
     /* ── Hero ── */
-    .hero{padding:40px 0 32px;border-bottom:1px solid var(--border);margin-bottom:30px}
+    .hero{padding:40px 0 32px;margin-bottom:30px}
     .hero-eyebrow{font-family:var(--open);font-size:.62rem;color:var(--green);letter-spacing:.18em;margin-bottom:12px;display:flex;align-items:center;gap:10px}
     .hero-eyebrow::before{content:'';width:20px;height:1px;background:var(--green);opacity:.6}
     .hero h2{font-size:2.6rem;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.1}
     .hero h2 em{font-style:normal;color:var(--green)}
     .hero-sub{margin-top:8px;font-family:var(--mono);font-size:.75rem;color:var(--muted);line-height:1.6}
-    .hero-stats{display:flex;gap:20px;margin-top:18px;flex-wrap:wrap}
     .stat{border:1px solid var(--border2);border-radius:4px;padding:6px 14px;background:var(--surface);font-family:var(--mono);font-size:.65rem}
     .stat .val{color:var(--green);font-size:.9rem;font-weight:700;display:block}
     .stat .lbl{color:var(--muted);font-size:.55rem;letter-spacing:.1em}
@@ -423,11 +422,7 @@
     <div class="hero-eyebrow">PODCAST · BẢO MẬT THÔNG TIN</div>
     <h2>Bảo mật dữ liệu<br><em>Là bảo vệ cho chính chúng ta.</em></h2>
     <p class="hero-sub">// Encrypt Everything &nbsp;·&nbsp; Think Before You Click &nbsp;·&nbsp; Stay Alert, Stay Secure &nbsp;·&nbsp; Authentication Required</p>
-    <!--div class="hero-stats">
-      <div class="stat"><span class="val" id="ep-count-val">—</span><span class="lbl">TẬP PODCAST</span></div>
-      <div class="stat"><span class="val">FREE</span><span class="lbl">MIỄN PHÍ 100%</span></div>
-      <div class="stat"><span class="val">HD</span><span class="lbl">CHẤT LƯỢNG CAO</span></div>
-    </div-->
+    <span id="ep-count-val" style="display:none"></span>
   </div>
 
   <p class="section-label">TẤT CẢ CÁC PODCAST</p>
@@ -455,7 +450,7 @@
         <span class="lbl">Hotline</span>
         <span class="val"><a href="#" target="_blank">18009060</a></span>
       </div>
-    </div>     
+    </div>
   </div>
   <div class="footer-bottom">
     <p>© 2026 <span>[SEV IT SECURITY]</span> — All rights reserved</p>
