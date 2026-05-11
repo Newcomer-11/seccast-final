@@ -388,7 +388,7 @@
 </head>
 <body>
 
-<!-- Access Gate -->
+<!-- Access Gate
 <div id="access-gate">
   <div class="gate-box">
     <div class="gate-logo"><div class="gate-logo-dot"></div>[SECURITY PODCAST]</div>
@@ -403,6 +403,28 @@
     <div class="gate-err" id="gate-err"></div>
     <button class="gate-btn" id="gate-btn" onclick="submitGate()">XÁC NHẬN TRUY CẬP</button>
     <div class="gate-footer">MEMBERS ONLY</div>
+  </div>
+</div> -->
+
+<!-- Access Gate -->
+<div id="access-gate">
+  <div class="gate-box">
+    <div class="gate-logo"><div class="gate-logo-dot"></div>[SECURITY PODCAST]</div>
+    <div class="gate-sub"></div>
+    <div class="gate-label">NHẬP SỐ GEN</div>
+    <div class="gate-input-wrap">
+      <input class="gate-input" type="text" id="gate-fullname"
+        placeholder="Nhập số GEN của bạn" autocomplete="name">
+    </div>
+    <div class="gate-label">HỌ VÀ TÊN</div>
+    <div class="gate-input-wrap">
+      <input class="gate-input" type="text" id="gate-address"
+        placeholder="Nhập họ tên của bạn" autocomplete="address-line1"
+        onkeydown="if(event.key==='Enter')submitGate()">
+    </div>
+    <div class="gate-err" id="gate-err"></div>
+    <button class="gate-btn" id="gate-btn" onclick="submitGate()">XÁC NHẬN VÀ TIẾP TỤC</button>
+    <div class="gate-footer">CẬP NHẬT THÔNG TIN TRUY CẬP</div>
   </div>
 </div>
 
@@ -830,44 +852,109 @@ function toggleTheme() {
 // ── Access Gate ───────────────────────────────────────────────────────────────
 const ACCESS_KEY = 'seccast_access';
 
+// async function initGate() {
+//   // Nếu đã unlock trong session này thì bỏ qua
+//   if (sessionStorage.getItem(ACCESS_KEY) === '1') {
+//     document.getElementById('access-gate').classList.add('hidden');
+//     return;
+//   }
+//   // Hỏi server xem có cần password không
+//   try {
+//     const res  = await fetch('/api/site-config');
+//     const data = await res.json();
+//     if (!data.requirePassword) {
+//       document.getElementById('access-gate').classList.add('hidden');
+//       return;
+//     }
+//   } catch(e) {
+//     // Nếu không fetch được thì cứ hiện popup
+//   }
+//   // Focus vào input
+//   setTimeout(() => document.getElementById('gate-input')?.focus(), 100);
+// }
+
 async function initGate() {
-  // Nếu đã unlock trong session này thì bỏ qua
+  // Nếu đã submit trong session này thì bỏ qua
   if (sessionStorage.getItem(ACCESS_KEY) === '1') {
     document.getElementById('access-gate').classList.add('hidden');
     return;
   }
-  // Hỏi server xem có cần password không
+  // Hỏi server xem có cần nhập thông tin không
   try {
     const res  = await fetch('/api/site-config');
     const data = await res.json();
-    if (!data.requirePassword) {
+    if (!data.requireInfo) {
       document.getElementById('access-gate').classList.add('hidden');
       return;
     }
   } catch(e) {
     // Nếu không fetch được thì cứ hiện popup
   }
-  // Focus vào input
-  setTimeout(() => document.getElementById('gate-input')?.focus(), 100);
+  // Focus vào input họ tên
+  setTimeout(() => document.getElementById('gate-fullname')?.focus(), 100);
 }
 
-async function submitGate() {
-  const input = document.getElementById('gate-input');
-  const btn   = document.getElementById('gate-btn');
-  const errEl = document.getElementById('gate-err');
-  const pw    = input.value;
+// async function submitGate() {
+//   const input = document.getElementById('gate-input');
+//   const btn   = document.getElementById('gate-btn');
+//   const errEl = document.getElementById('gate-err');
+//   const pw    = input.value;
 
-  if (!pw) { showGateErr('// Vui lòng nhập mật khẩu'); return; }
+//   if (!pw) { showGateErr('// Vui lòng nhập mật khẩu'); return; }
+
+//   btn.disabled = true;
+//   btn.textContent = 'ĐANG XÁC THỰC...';
+//   errEl.textContent = '';
+
+//   try {
+//     const res  = await fetch('/api/verify-password', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ password: pw })
+//     });
+//     const data = await res.json();
+//     if (data.ok) {
+//       sessionStorage.setItem(ACCESS_KEY, '1');
+//       const gate = document.getElementById('access-gate');
+//       gate.style.transition = 'opacity .4s';
+//       gate.style.opacity = '0';
+//       setTimeout(() => gate.classList.add('hidden'), 400);
+//     } else {
+//       showGateErr('// Mật khẩu không đúng');
+//       input.classList.add('error');
+//       setTimeout(() => input.classList.remove('error'), 500);
+//       input.value = '';
+//       input.focus();
+//     }
+//   } catch(e) {
+//     showGateErr('// Lỗi kết nối, thử lại');
+//   }
+
+//   btn.disabled = false;
+//   btn.textContent = 'XÁC NHẬN TRUY CẬP';
+// }
+
+async function submitGate() {
+  const fullname = document.getElementById('gate-fullname');
+  const address  = document.getElementById('gate-address');
+  const btn      = document.getElementById('gate-btn');
+  const errEl    = document.getElementById('gate-err');
+
+  if (!fullname.value.trim()) { showGateErr('// Vui lòng nhập số GEN'); return; }
+  if (!address.value.trim())  { showGateErr('// Vui lòng nhập Họ và Tên'); return; }
 
   btn.disabled = true;
-  btn.textContent = 'ĐANG XÁC THỰC...';
+  btn.textContent = 'ĐANG GỬI...';
   errEl.textContent = '';
 
   try {
-    const res  = await fetch('/api/verify-password', {
+    const res = await fetch('/api/submit-access', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw })
+      body: JSON.stringify({ 
+        fullName: fullname.value.trim(), 
+        address: address.value.trim() 
+      })
     });
     const data = await res.json();
     if (data.ok) {
@@ -877,31 +964,29 @@ async function submitGate() {
       gate.style.opacity = '0';
       setTimeout(() => gate.classList.add('hidden'), 400);
     } else {
-      showGateErr('// Mật khẩu không đúng');
-      input.classList.add('error');
-      setTimeout(() => input.classList.remove('error'), 500);
-      input.value = '';
-      input.focus();
+      showGateErr('// ' + (data.error || 'Lỗi gửi dữ liệu'));
+      fullname.classList.add('error');
+      setTimeout(() => fullname.classList.remove('error'), 500);
     }
   } catch(e) {
     showGateErr('// Lỗi kết nối, thử lại');
   }
 
   btn.disabled = false;
-  btn.textContent = 'XÁC NHẬN TRUY CẬP';
+  btn.textContent = 'XÁC NHẬN VÀ TIẾP TỤC';
 }
 
 function showGateErr(msg) {
   document.getElementById('gate-err').textContent = msg;
 }
 
-function toggleGateEye() {
-  const input = document.getElementById('gate-input');
-  const eye   = document.getElementById('gate-eye');
-  if (input.type === 'password') { input.type = 'text';     eye.textContent = '🙈'; }
-  else                           { input.type = 'password'; eye.textContent = '👁'; }
-  input.focus();
-}
+// function toggleGateEye() {
+//   const input = document.getElementById('gate-input');
+//   const eye   = document.getElementById('gate-eye');
+//   if (input.type === 'password') { input.type = 'text';     eye.textContent = '🙈'; }
+//   else                           { input.type = 'password'; eye.textContent = '👁'; }
+//   input.focus();
+// }
 
 initGate();
 

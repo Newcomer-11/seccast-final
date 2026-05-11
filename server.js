@@ -137,7 +137,7 @@ async function logVisitor(req) {
 
 async function ensureTable() {
   if (!SUPABASE_URL || !SUPABASE_KEY) return;
-  const checks = ['episodes', 'visitor_logs'];
+  const checks = ['episodes', 'visitor_logs', 'access_history'];
   for (const t of checks) {
     const { error } = await supabase.from(t).select('id').limit(1);
     if (error && error.code === '42P01')
@@ -159,9 +159,14 @@ app.post('/api/verify-password', (req, res) => {
   res.json({ ok: password === SITE_PASSWORD });
 });
 
-// Kiểm tra xem site có cần password không
+// // Kiểm tra xem site có cần password không
+// app.get('/api/site-config', (req, res) => {
+//   res.json({ requirePassword: !!SITE_PASSWORD });
+// });
+
+// Kiểm tra xem site có cần nhập thông tin không
 app.get('/api/site-config', (req, res) => {
-  res.json({ requirePassword: !!SITE_PASSWORD });
+  res.json({ requireInfo: true });
 });
 
 app.get('/api/tracks', async (req, res) => {
@@ -172,6 +177,25 @@ app.get('/api/tracks', async (req, res) => {
       .from(SUPABASE_BUCKET)
       .list('', { limit: 500, sortBy: { column: 'created_at', order: 'desc' } });
     if (storageErr) throw storageErr;
+    // Lưu thông tin họ tên + địa chỉ khi vào site
+    app.post('/api/submit-access', async (req, res) => {
+      const { fullName, address } = req.body;
+      if (!fullName || !address) {
+        return res.status(400).json({ error: 'Vui lòng nhập đầy đủ họ tên và địa chỉ' });
+      }
+      try {
+        const ip = getRealIP(req);
+        const { error } = await supabase.from('access_history').insert({
+          full_name: fullName,
+          address: address,
+          ip: ip
+        });
+        if (error) throw error;
+        res.json({ ok: true });
+      } catch (e) {
+        res.status(500).json({ error: e.message });
+      }
+    });
 
     const { data: episodes } = await supabase.from('episodes').select('*');
     const metaMap = {};
@@ -282,16 +306,16 @@ app.put('/admin/episodes/:filename', requireAuth, async (req, res) => {
 });
 
 // Xóa track
-app.delete('/admin/tracks/:filename', requireAuth, async (req, res) => {
-  const filename = decodeURIComponent(req.params.filename);
-  try {
-    await supabase.storage.from(SUPABASE_BUCKET).remove([filename]);
-    await supabase.from('episodes').delete().eq('filename', filename);
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: 'Xóa thất bại: ' + e.message });
-  }
-});
+// app.delete('/admin/tracks/:filename', requireAuth, async (req, res) => {
+//   const filename = decodeURIComponent(req.params.filename);
+//   try {
+//     await supabase.storage.from(SUPABASE_BUCKET).remove([filename]);
+//     await supabase.from('episodes').delete().eq('filename', filename);
+//     res.json({ success: true });
+//   } catch (e) {
+//     res.status(500).json({ error: 'Xóa thất bại: ' + e.message });
+//   }
+// });
 
 // ─── Routes: Admin — Visitor Logs ─────────────────────────────────────────────
 app.get('/admin/api/logs', requireAuth, async (req, res) => {
@@ -352,6 +376,36 @@ app.get('/admin/api/logs/stats', requireAuth, async (req, res) => {
 app.delete('/admin/api/logs', requireAuth, async (req, res) => {
   try {
     await supabase.from('visitor_logs').delete().neq('id', 0);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── Routes: Admin — Access History ──────────────────────────────────────────
+app.get('/admin/api/access-history', requireAuth, async (req, res) => {
+  try {
+    const page  = parseInt(req.query.page  || '1');
+    const limit = parseInt(req.query.limit || '50');
+    const from  = (page - 1) * limit;
+
+    const { data, error, count } = await supabase
+      .from('access_history')
+      .select('*', { count: 'exact' })
+      .order('submitted_at', { ascending: false })
+      .range(from, from + limit - 1);
+
+    if (error) throw error;
+    res.json({ history: data || [], total: count || 0, page, limit });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Xóa toàn bộ lịch sử truy cập (admin action)
+app.delete('/admin/api/access-history', requireAuth, async (req, res) => {
+  try {
+    await supabase.from('access_history').delete().neq('id', 0);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
