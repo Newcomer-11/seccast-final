@@ -385,23 +385,6 @@ app.delete('/admin/api/logs', requireAuth, async (req, res) => {
 });
 
 // ─── Routes: Admin — Access History ──────────────────────────────────────────
-app.get('/admin/api/access-history/stats', requireAuth, async (req, res) => {
-  try {
-    const now    = new Date();
-    const today  = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-    const week   = new Date(Date.now() - 7*24*60*60*1000).toISOString();
-
-    const [total, todayRes, weekRes] = await Promise.all([
-      supabase.from('access_history').select('id', {count:'exact', head:true}),
-      supabase.from('access_history').select('id', {count:'exact', head:true}).gte('submitted_at', today),
-      supabase.from('access_history').select('id', {count:'exact', head:true}).gte('submitted_at', week),
-    ]);
-    res.json({ total: total.count||0, today: todayRes.count||0, week: weekRes.count||0 });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
 app.get('/admin/api/access-history', requireAuth, async (req, res) => {
   try {
     const page  = parseInt(req.query.page  || '1');
