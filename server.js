@@ -169,16 +169,7 @@ app.get('/api/site-config', (req, res) => {
   res.json({ requireInfo: true });
 });
 
-app.get('/api/tracks', async (req, res) => {
-  if (!SUPABASE_URL || !SUPABASE_KEY)
-    return res.json({ tracks: [], warning: 'Supabase chưa được cấu hình' });
-  try {
-    const { data: files, error: storageErr } = await supabase.storage
-      .from(SUPABASE_BUCKET)
-      .list('', { limit: 500, sortBy: { column: 'created_at', order: 'desc' } });
-    if (storageErr) throw storageErr;
-    // Lưu thông tin họ tên + địa chỉ khi vào site
-    app.post('/api/submit-access', async (req, res) => {
+app.post('/api/submit-access', async (req, res) => {
       const { fullName, address } = req.body;
       if (!fullName || !address) {
         return res.status(400).json({ error: 'Vui lòng nhập đầy đủ họ tên và địa chỉ' });
@@ -196,6 +187,17 @@ app.get('/api/tracks', async (req, res) => {
         res.status(500).json({ error: e.message });
       }
     });
+
+app.get('/api/tracks', async (req, res) => {
+  if (!SUPABASE_URL || !SUPABASE_KEY)
+    return res.json({ tracks: [], warning: 'Supabase chưa được cấu hình' });
+  try {
+    const { data: files, error: storageErr } = await supabase.storage
+      .from(SUPABASE_BUCKET)
+      .list('', { limit: 500, sortBy: { column: 'created_at', order: 'desc' } });
+    if (storageErr) throw storageErr;
+    // Lưu thông tin họ tên + địa chỉ khi vào site
+    
 
     const { data: episodes } = await supabase.from('episodes').select('*');
     const metaMap = {};
