@@ -170,7 +170,7 @@ app.get('/api/site-config', (req, res) => {
 });
 
 app.post('/api/submit-access', async (req, res) => {
-      const { fullName, address } = req.body;
+    const { fullName, address } = req.body;
       if (!fullName || !address) {
         return res.status(400).json({ error: 'Vui lòng nhập đầy đủ họ tên và địa chỉ' });
       }
