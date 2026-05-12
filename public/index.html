@@ -60,7 +60,7 @@
       padding:20px;
     }
     #access-gate.hidden{display:none}
-    .gate-box{
+    /* .gate-box{
       background:var(--surface);border:1px solid var(--border2);border-radius:12px;
       padding:36px 32px;width:100%;max-width:360px;position:relative;overflow:hidden;
       box-shadow:0 0 60px rgba(0,255,136,.06);
@@ -120,7 +120,7 @@
       margin-top:20px;text-align:center;
       font-family:var(--mono);font-size:.55rem;color:var(--muted2);
       letter-spacing:.08em;
-    }
+    } */
     html{scroll-behavior:smooth}
     body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
     body.player-open .site-footer{padding-bottom:110px}
@@ -407,7 +407,7 @@
 </div> -->
 
 <!-- Access Gate -->
-<div id="access-gate">
+<!-- <div id="access-gate">
   <div class="gate-box">
     <div class="gate-logo"><div class="gate-logo-dot"></div>[FORM XÁC NHẬN THÔNG TIN]</div>
     <div class="gate-sub"></div>
@@ -424,9 +424,9 @@
     </div>
     <div class="gate-err" id="gate-err"></div>
     <button class="gate-btn" id="gate-btn" onclick="submitGate()">XÁC NHẬN VÀ TIẾP TỤC</button>
-    <!--div class="gate-footer">CẬP NHẬT THÔNG TIN TRUY CẬP</div-->
+    
   </div>
-</div>
+</div> -->
 
 <header>
   <div class="header-inner">
@@ -850,7 +850,7 @@ function toggleTheme() {
 
 
 // ── Access Gate ───────────────────────────────────────────────────────────────
-const ACCESS_KEY = 'seccast_access';
+// const ACCESS_KEY = 'seccast_access';
 
 // async function initGate() {
 //   // Nếu đã unlock trong session này thì bỏ qua
@@ -873,26 +873,26 @@ const ACCESS_KEY = 'seccast_access';
 //   setTimeout(() => document.getElementById('gate-input')?.focus(), 100);
 // }
 
-async function initGate() {
-  // Nếu đã submit trong session này thì bỏ qua
-  if (sessionStorage.getItem(ACCESS_KEY) === '1') {
-    document.getElementById('access-gate').classList.add('hidden');
-    return;
-  }
-  // Hỏi server xem có cần nhập thông tin không
-  try {
-    const res  = await fetch('/api/site-config');
-    const data = await res.json();
-    if (!data.requireInfo) {
-      document.getElementById('access-gate').classList.add('hidden');
-      return;
-    }
-  } catch(e) {
-    // Nếu không fetch được thì cứ hiện popup
-  }
-  // Focus vào input họ tên
-  setTimeout(() => document.getElementById('gate-fullname')?.focus(), 100);
-}
+// async function initGate() {
+//   // Nếu đã submit trong session này thì bỏ qua
+//   if (sessionStorage.getItem(ACCESS_KEY) === '1') {
+//     document.getElementById('access-gate').classList.add('hidden');
+//     return;
+//   }
+//   // Hỏi server xem có cần nhập thông tin không
+//   try {
+//     const res  = await fetch('/api/site-config');
+//     const data = await res.json();
+//     if (!data.requireInfo) {
+//       document.getElementById('access-gate').classList.add('hidden');
+//       return;
+//     }
+//   } catch(e) {
+//     // Nếu không fetch được thì cứ hiện popup
+//   }
+//   // Focus vào input họ tên
+//   setTimeout(() => document.getElementById('gate-fullname')?.focus(), 100);
+// }
 
 // async function submitGate() {
 //   const input = document.getElementById('gate-input');
@@ -934,51 +934,51 @@ async function initGate() {
 //   btn.textContent = 'XÁC NHẬN TRUY CẬP';
 // }
 
-async function submitGate() {
-  const fullname = document.getElementById('gate-fullname');
-  const address  = document.getElementById('gate-address');
-  const btn      = document.getElementById('gate-btn');
-  const errEl    = document.getElementById('gate-err');
+// async function submitGate() {
+//   const fullname = document.getElementById('gate-fullname');
+//   const address  = document.getElementById('gate-address');
+//   const btn      = document.getElementById('gate-btn');
+//   const errEl    = document.getElementById('gate-err');
 
-  if (!fullname.value.trim()) { showGateErr('// Vui lòng nhập số GEN'); return; }
-  if (!address.value.trim())  { showGateErr('// Vui lòng nhập Họ và Tên'); return; }
+//   if (!fullname.value.trim()) { showGateErr('// Vui lòng nhập số GEN'); return; }
+//   if (!address.value.trim())  { showGateErr('// Vui lòng nhập Họ và Tên'); return; }
 
-  btn.disabled = true;
-  btn.textContent = 'ĐANG GỬI...';
-  errEl.textContent = '';
+//   btn.disabled = true;
+//   btn.textContent = 'ĐANG GỬI...';
+//   errEl.textContent = '';
 
-  try {
-    const res = await fetch('/api/submit-access', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        fullName: fullname.value.trim(), 
-        address: address.value.trim() 
-      })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      sessionStorage.setItem(ACCESS_KEY, '1');
-      const gate = document.getElementById('access-gate');
-      gate.style.transition = 'opacity .4s';
-      gate.style.opacity = '0';
-      setTimeout(() => gate.classList.add('hidden'), 400);
-    } else {
-      showGateErr('// ' + (data.error || 'Lỗi gửi dữ liệu'));
-      fullname.classList.add('error');
-      setTimeout(() => fullname.classList.remove('error'), 500);
-    }
-  } catch(e) {
-    showGateErr('// Lỗi kết nối, thử lại');
-  }
+//   try {
+//     const res = await fetch('/api/submit-access', {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ 
+//         fullName: fullname.value.trim(), 
+//         address: address.value.trim() 
+//       })
+//     });
+//     const data = await res.json();
+//     if (data.ok) {
+//       sessionStorage.setItem(ACCESS_KEY, '1');
+//       const gate = document.getElementById('access-gate');
+//       gate.style.transition = 'opacity .4s';
+//       gate.style.opacity = '0';
+//       setTimeout(() => gate.classList.add('hidden'), 400);
+//     } else {
+//       showGateErr('// ' + (data.error || 'Lỗi gửi dữ liệu'));
+//       fullname.classList.add('error');
+//       setTimeout(() => fullname.classList.remove('error'), 500);
+//     }
+//   } catch(e) {
+//     showGateErr('// Lỗi kết nối, thử lại');
+//   }
 
-  btn.disabled = false;
-  btn.textContent = 'XÁC NHẬN VÀ TIẾP TỤC';
-}
+//   btn.disabled = false;
+//   btn.textContent = 'XÁC NHẬN VÀ TIẾP TỤC';
+// }
 
-function showGateErr(msg) {
-  document.getElementById('gate-err').textContent = msg;
-}
+// function showGateErr(msg) {
+//   document.getElementById('gate-err').textContent = msg;
+// }
 
 // function toggleGateEye() {
 //   const input = document.getElementById('gate-input');
@@ -988,7 +988,7 @@ function showGateErr(msg) {
 //   input.focus();
 // }
 
-initGate();
+// initGate();
 
 loadTracks();
 </script>
